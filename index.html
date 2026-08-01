@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olajkereső — melyik motorolaj kell bele?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  :root{
+    --asphalt: #1B1D21;
+    --asphalt-2: #24272C;
+    --steel: #3B4A5A;
+    --amber: #E8A33D;
+    --amber-dim: #B87F26;
+    --paper: #EDEAE3;
+    --paper-dim: #A9A69D;
+    --rust: #C1440E;
+    --line: #3A3D42;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--asphalt);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    background-image:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 14px);
+  }
+
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px 80px;}
+
+  /* Header / hero */
+  header{
+    padding:56px 20px 40px;
+    border-bottom:3px solid var(--amber);
+    position:relative;
+    overflow:hidden;
+  }
+  header .inner{max-width:900px;margin:0 auto;position:relative;z-index:2;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--amber);
+    margin:0 0 14px;
+  }
+  h1{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    font-size:clamp(34px, 6vw, 58px);
+    line-height:0.98;
+    letter-spacing:0.01em;
+    margin:0 0 16px;
+    color:var(--paper);
+  }
+  h1 span{color:var(--amber);}
+  .lead{
+    color:var(--paper-dim);
+    font-size:16px;
+    max-width:60ch;
+    line-height:1.55;
+    margin:0;
+  }
+  .drop{
+    position:absolute;
+    right:-40px; top:-30px;
+    width:220px; height:220px;
+    border-radius:50% 50% 50% 0;
+    transform:rotate(45deg);
+    background:radial-gradient(circle at 35% 30%, #F2C572, var(--amber) 55%, var(--amber-dim) 100%);
+    opacity:0.9;
+    filter:blur(0.3px);
+    z-index:1;
+  }
+
+  /* Ticket / form */
+  .ticket{
+    margin-top:-1px;
+    background:var(--asphalt-2);
+    border:1px solid var(--line);
+    border-top:none;
+    padding:32px;
+  }
+  .ticket-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px dashed var(--line);
+    padding-bottom:14px; margin-bottom:22px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--paper-dim);
+  }
+  .ticket-head b{color:var(--paper); font-weight:600;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px 20px;
+  }
+  @media(max-width:600px){ .grid{grid-template-columns:1fr;} }
+
+  .field{display:flex; flex-direction:column; gap:8px;}
+  .field label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--amber);
+  }
+  .field select, .field input{
+    background:var(--asphalt);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:15px;
+    padding:12px 14px;
+    border-radius:2px;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  .field select:focus, .field input:focus{border-color:var(--amber);}
+
+  .actions{margin-top:26px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+  button.go{
+    font-family:'Oswald', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    font-weight:600;
+    font-size:16px;
+    background:var(--amber);
+    color:var(--asphalt);
+    border:none;
+    padding:14px 30px;
+    cursor:pointer;
+    border-radius:2px;
+    transition:background .15s ease, transform .1s ease;
+  }
+  button.go:hover{background:#F2C572;}
+  button.go:active{transform:translateY(1px);}
+  button.go:disabled{opacity:0.5; cursor:default;}
+  button.go:focus-visible{outline:3px solid var(--paper); outline-offset:2px;}
+  .hint{font-size:13px; color:var(--paper-dim);}
+  #searchStatus{font-family:'IBM Plex Mono', monospace;}
+  #searchStatus.err{color:var(--rust);}
+  #searchStatus.ok{color:var(--amber);}
+
+  /* Results */
+  #results{margin-top:34px;}
+  .result-card{
+    background:var(--asphalt-2);
+    border:1px solid var(--line);
+    border-left:4px solid var(--amber);
+    padding:22px 24px;
+    margin-bottom:16px;
+  }
+  .result-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .result-card .engine{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--paper-dim);
+    margin:0;
+  }
+  .btn-copy {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--amber);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn-copy:hover {
+    background: var(--amber);
+    color: var(--asphalt);
+  }
+  .spec-row{
+    display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .visc{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:30px;
+    color:var(--amber);
+    letter-spacing:0.02em;
+  }
+  .std{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    color:var(--paper);
+    background:var(--asphalt);
+    border:1px solid var(--line);
+    padding:3px 9px;
+    border-radius:2px;
+  }
+  .capacity{font-size:13.5px; color:var(--paper-dim);}
+  .note{font-size:13.5px; color:var(--paper-dim); margin-top:8px; line-height:1.5;}
+
+  .extra-specs{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .extra-row{
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:10px;
+    font-size:13.5px;
+    line-height:1.4;
+  }
+  .extra-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--amber-dim);
+    padding-top:1px;
+  }
+  .extra-val{color:var(--paper);}
+  @media(max-width:480px){
+    .extra-row{grid-template-columns:1fr;}
+  }
+
+  .empty, .fallback{
+    background:var(--asphalt-2);
+    border:1px solid var(--line);
+    border-left:4px solid var(--rust);
+    padding:22px 24px;
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--paper);
+  }
+
+  .disclaimer{
+    margin-top:40px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+    font-size:12.5px;
+    color:var(--paper-dim);
+    line-height:1.6;
+  }
+  .disclaimer b{color:var(--paper);}
+
+  footer{
+    text-align:center;
+    padding:30px 20px 10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="drop"></div>
+  <div class="inner">
+    <p class="eyebrow">Motorolaj-tanácsadó · Gemini AI</p>
+    <h1>Milyen olaj<br>kell <span>bele?</span></h1>
+    <p class="lead">Add meg a márkát, a modellt, az évjáratot és az üzemanyagot — az AI, AutoData-szintű pontosságra törekedve, megadja a gyári viszkozitási és minőségi előírást (ACEA/API), a motorkódot, a váltóolajat és a hűtőfolyadékot.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="ticket">
+    <div class="ticket-head"><span>Szerviz&nbsp;cédula</span><b>#OLAJ-001</b></div>
+
+    <div class="grid">
+      <div class="field">
+        <label for="make">Márka</label>
+        <input type="text" id="make" placeholder="pl. Skoda">
+      </div>
+      <div class="field">
+        <label for="model">Modell</label>
+        <input type="text" id="model" placeholder="pl. Octavia III">
+      </div>
+      <div class="field">
+        <label for="year">Évjárat</label>
+        <input type="number" id="year" placeholder="pl. 2014" min="1970" max="2026">
+      </div>
+      <div class="field">
+        <label for="fuel">Üzemanyag</label>
+        <select id="fuel">
+          <option value="benzin">Benzin</option>
+          <option value="dizel">Dízel</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="go" id="searchBtn">Olaj megkeresése</button>
+      <span class="hint" id="searchStatus">Gemini AI · AutoData-pontosságra törekedve</span>
+    </div>
+  </div>
+
+  <div id="results"></div>
+
+  <div class="disclaimer">
+    <b>Fontos:</b> ez az eszköz AI (Gemini) által generált, tájékoztató jellegű adatokat ad — motorolaj, motorkód, váltóolaj és hűtőfolyadék tekintetében is —, nem hivatalos gyári katalógus. Egy modellen belül több motorkód is előfordulhat, és ezekhez eltérő előírás tartozhat. Az AI időnként tévedhet. A pontos adatokat mindig a <b>szervizkönyv</b>, a <b>motorblokkon/motorkódcímkén</b> szereplő jelölés, vagy a gyártó hivatalos katalógusa alapján ellenőrizd, mielőtt olajat, hűtőfolyadékot vagy váltóolajat vásárolsz.
+  </div>
+</div>
+
+<footer>Saját használatra · Gemini API (proxyn keresztül)</footer>
+
+<script>
+/* ---------------------------------------------------------
+   Beállítások
+   ---------------------------------------------------------
+   A Gemini API kulcs NEM ebben a fájlban van — ez a fájl egy
+   saját szerver oldali proxy-t hív meg (pl. Cloudflare Worker),
+   ami a kulcsot titokban tartja. Csak a proxy URL-jét kell ide
+   beírni, az már bátran feltölthető GitHub-ra / GitHub Pages-re.
+--------------------------------------------------------- */
+const PROXY_URL    = 'https://olajkereso-proxy.TE-FELHASZNALONEVED.workers.dev';
+const GEMINI_MODEL = 'gemini-3.6-flash';
+
+const makeInp   = document.getElementById('make');
+const modelInp  = document.getElementById('model');
+const yearInp   = document.getElementById('year');
+const fuelSel   = document.getElementById('fuel');
+const searchBtn = document.getElementById('searchBtn');
+const statusEl  = document.getElementById('searchStatus');
+const resultsEl = document.getElementById('results');
+
+function setStatus(text, kind){
+  statusEl.textContent = text;
+  statusEl.className = kind ? kind : '';
+}
+
+const AI_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    make:    { type: "STRING", description: "Márkanév, pl. Skoda" },
+    model:   { type: "STRING", description: "Modellnév, pl. Octavia III" },
+    from:    { type: "INTEGER", description: "Az adott generáció/motorváltozat gyártási időszakának kezdete (év)" },
+    to:      { type: "INTEGER", description: "Az adott generáció/motorváltozat gyártási időszakának vége (év); ha jelenleg is gyártják, 2026" },
+    fuel:    { type: "STRING", enum: ["benzin", "dizel"] },
+    visc:    { type: "STRING", description: "Gyárilag ajánlott viszkozitás(ok), pl. '5W-30 / 5W-40'" },
+    std:     { type: "STRING", description: "Gyári minőségi előírás(ok), pl. 'ACEA C3 / API SN'" },
+    cap:     { type: "STRING", description: "Motorolaj feltöltési mennyiség szűrővel, pl. '4,3 l (2.0 TDI)'" },
+    code:    { type: "STRING", description: "A legvalószínűbb motorkód(ok) az adott évjárathoz, pl. 'CRLB (2.0 TDI 150 LE)'" },
+    gear:    { type: "STRING", description: "Váltóolaj típusa/mennyisége" },
+    coolant: { type: "STRING", description: "Hűtőfolyadék típusa/színe" },
+    note:    { type: "STRING", description: "Opcionális megjegyzés, ha van valami különleges tudnivaló; ha nincs, üres string" }
+  },
+  required: ["make","model","from","to","fuel","visc","std","cap","code","gear","coolant"]
+};
+
+async function generateWithGemini(make, model, year, fuel){
+  if(!PROXY_URL || PROXY_URL.includes('TE-FELHASZNALONEVED')){
+    throw new Error('Nincs beállítva a proxy URL a fájlban (PROXY_URL konstans a script elején).');
+  }
+
+  const description = `${make} ${model}${year ? ' ' + year : ''}, ${fuel==='dizel' ? 'dízel' : 'benzin'}`;
+
+  const prompt = `Kérlek, gyűjtsd össze a következő gépjármű gyári folyadék adatait az AutoData alapján, és jelenítsd meg pontosan az alábbi formátumban és stílusban!
+
+Példa bemenet: "Suzuki Swift II 1.3 M13A 2008, benzin"
+Példa kimenet:
+{
+  "make": "Suzuki",
+  "model": "Swift I / II (gömbölyű)",
+  "from": 1989,
+  "to": 2003,
+  "fuel": "benzin",
+  "visc": "10W-40 / 5W-40",
+  "std": "API SG/SH/SJ/SL / ACEA A3/B4",
+  "cap": "3,3 l",
+  "code": "G10A (1.0), G13BA/BB (1.3)",
+  "gear": "75W-90 GL-4 (2,4 liter)",
+  "coolant": "IAT / HOAT kék/zöld (4,0-4,5 l)",
+  "note": "G-sorozatú szíjas motorok. A 10W-40 általános, de az 5W-40 is kiváló indítási védelmet nyújt. A3/B4 előírás."
+}
+
+Fontos szabályok, amiket be kell tartanod:
+- A "model" mezőbe írd bele a generációt/megnevezést is, ahogy a példában (pl. "Swift I / II (gömbölyű)", "Octavia III"), ne csak a puszta modellnevet.
+- A "from"/"to" a TELJES gyártási generáció évjárattartománya legyen (nem csak a megadott egyetlen év), ahogy a példában is 1989–2003 szerepel egy 2008-as bemenetre — ha jelenleg is gyártják, "to" legyen 2026.
+- A "code" mezőbe a generációhoz tartozó, ténylegesen létező motorkód(ok) kerüljenek, lehetőleg a megadott motoradatokat (hengerűrtartalom, motorkód, ha volt ilyen a bemenetben) figyelembe véve.
+- A "note" mezőbe egy rövid, lényegre törő szakmai megjegyzés kerüljön a motorról, az olajfilm vastagságáról, vagy a váltóolaj kényes pontjairól (pl. GL-4 vs GL-5 figyelmeztetés), ha van ilyen.
+- Minden mező magyarul, a példával megegyező tömör, rövidítéses stílusban legyen (pl. "5W-30 / 5W-40", "ACEA C3", "4,3 l (2.0 TDI)").
+- Ne találj ki hamis, nem létező motorkódot — ha bizonytalan vagy, fogalmazz általánosabban (pl. "2.0 TDI változatok").
+
+Most ugyanezt csináld meg erre az autóra:
+"${description}"
+
+Add vissza KIZÁRÓLAG a JSON objektumot a megadott séma szerint, a példa stílusában, más szöveg nélkül.`;
+
+  const resp = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: GEMINI_MODEL,
+      contents: [ { parts: [ { text: prompt } ] } ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: AI_SCHEMA,
+        thinkingConfig: { thinkingLevel: 'low' }
+      }
+    })
+  });
+
+  if(!resp.ok){
+    let msg = `Szerverhiba (${resp.status})`;
+    try{ const errBody = await resp.json(); if(errBody?.error?.message) msg += ': ' + errBody.error.message; }catch(e){}
+    throw new Error(msg);
+  }
+
+  const data = await resp.json();
+  const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('') || '';
+  if(!text) throw new Error('A Gemini nem adott vissza értékelhető választ.');
+
+  let parsed;
+  try{ parsed = JSON.parse(text); }
+  catch(e){ throw new Error('A válasz nem volt érvényes JSON: ' + text.slice(0,200)); }
+
+  return parsed;
+}
+
+function copySpec(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Adatok másolva a vágólapra:\n' + text);
+  }).catch(err => {
+    console.error('Hiba a másoláskor:', err);
+  });
+}
+
+function renderResult(r){
+  const copyText = `${r.make} ${r.model} | Olaj: ${r.visc} (${r.std}) | Mennyiség: ${r.cap} | Motorkód: ${r.code || 'N/A'}`;
+  resultsEl.innerHTML = `
+    <div class="result-card">
+      <div class="result-card-header">
+        <p class="engine">${r.make} · ${r.model} · ${r.from}–${r.to==2026?'napjainkig':r.to} · ${r.fuel==='benzin'?'Benzin':r.fuel==='dizel'?'Dízel':''}</p>
+        <button type="button" class="btn-copy" onclick="copySpec('${copyText.replace(/'/g, "\\'")}')">Másolás</button>
+      </div>
+      <div class="spec-row">
+        <span class="visc">${r.visc}</span>
+        <span class="std">${r.std}</span>
+      </div>
+      <p class="capacity">Kb. feltöltési mennyiség: ${r.cap}</p>
+      <div class="extra-specs">
+        <div class="extra-row"><span class="extra-label">Motorkód</span><span class="extra-val">${r.code || 'változattól függ — ellenőrizd a szervizkönyvben vagy a motorblokkon'}</span></div>
+        <div class="extra-row"><span class="extra-label">Váltóolaj</span><span class="extra-val">${r.gear || '—'}</span></div>
+        <div class="extra-row"><span class="extra-label">Hűtőfolyadék</span><span class="extra-val">${r.coolant || '—'}</span></div>
+      </div>
+      ${r.note ? `<p class="note">${r.note}</p>` : ''}
+    </div>
+  `;
+}
+
+function renderError(message){
+  resultsEl.innerHTML = `<div class="empty"><b>Hiba történt:</b> ${message}</div>`;
+}
+
+async function runSearch(){
+  const make  = makeInp.value.trim();
+  const model = modelInp.value.trim();
+  const year  = parseInt(yearInp.value, 10) || null;
+  const fuel  = fuelSel.value;
+
+  if(!make || !model){
+    resultsEl.innerHTML = `<div class="empty">Add meg legalább a márkát és a modellt a kereséshez.</div>`;
+    return;
+  }
+
+  resultsEl.innerHTML = '';
+  searchBtn.disabled = true;
+  setStatus('Keresés az AI-val…', null);
+  try{
+    const entry = await generateWithGemini(make, model, year, fuel);
+    setStatus('Gemini AI · AutoData-pontosságra törekedve', 'ok');
+    renderResult(entry);
+  }catch(err){
+    console.error(err);
+    setStatus('Hiba történt.', 'err');
+    renderError(err.message || 'Ismeretlen hiba.');
+  }finally{
+    searchBtn.disabled = false;
+  }
+}
+
+searchBtn.addEventListener('click', runSearch);
+yearInp.addEventListener('keydown', (e)=>{ if(e.key==='Enter') runSearch(); });
+modelInp.addEventListener('keydown', (e)=>{ if(e.key==='Enter') runSearch(); });
+</script>
+
+</body>
+</html>
