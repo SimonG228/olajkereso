@@ -476,7 +476,7 @@ async function runSearch(){
 
   resultsEl.innerHTML = '';
   searchBtn.disabled = true;
-  setStatus('Keresés az AI-val…', null);
+
   try{
     const entry = await generateWithGemini(make, model, year, fuel);
     setStatus('Gemini AI · AutoData-pontosságra törekedve', 'ok');
