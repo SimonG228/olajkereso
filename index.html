@@ -280,8 +280,7 @@
 
 <div class="wrap">
   <div class="ticket">
-    <div class="ticket-head"><span>Szerviz&nbsp;cédula</span><b>#OLAJ-001</b></div>
-
+    <!--<div class="ticket-head"><span>Szerviz&nbsp;cédula</span><b>#OLAJ-001</b></div>-->
     <div class="grid">
       <div class="field">
         <label for="make">Márka</label>
@@ -306,9 +305,6 @@
 
     <div class="actions">
       <button class="go" id="searchBtn">Keresés</button>
-      <span class="hint"
-id="searchStatus">Gemini AI • AutoData-pontosságra
-törekedve</span>
     </div>
   </div>
 
@@ -338,9 +334,13 @@ const modelInp  = document.getElementById('model');
 const yearInp   = document.getElementById('year');
 const fuelSel   = document.getElementById('fuel');
 const searchBtn = document.getElementById('searchBtn');
-const statusEl  = document.getElementById('searchStatus');
+//const statusEl  = document.getElementById('searchStatus');
 const resultsEl = document.getElementById('results');
   
+function setStatus(text, kind){
+  //statusEl.textContent = text;
+  //statusEl.className = kind ? kind : '';
+}  
 
 const AI_SCHEMA = {
   type: "OBJECT",
